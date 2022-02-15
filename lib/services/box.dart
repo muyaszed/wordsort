@@ -21,12 +21,12 @@ generateWordList() {
       wordList.add(fourWord);
     }
   }
-
+ 
   return wordList;
 }
 
-List<Box> generateBoxProperties() {
-  var wordList = generateWordList();
+List<Box> generateBoxProperties(wordList) {
+  // var wordList = generateWordList();
   print([wordList[0], wordList[1], wordList[2], wordList[3], wordList[4]]);
 
   var splitWord1 = wordList[0].split('');
@@ -150,8 +150,8 @@ List<Box> generateBoxProperties() {
     bool isEmpty = allLetters.length - 1 == index;
     Color color = isEmpty ? const Color(0xff0b132b) : const Color(0xff1c2541);
 
-    return Box(
-        posX, posY, tile, letter, createNeighbour(index, x, y), isEmpty, color);
+    return Box(posX, posY, tile, letter, createNeighbour(index, x, y), isEmpty,
+        color, index*50);
   }
 
   return List.generate(

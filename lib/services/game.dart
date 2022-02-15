@@ -1,15 +1,15 @@
 import '../models/box.dart';
 import '../services/box.dart';
 
-bool checkSolution(List<Box> updatedBox) {
-  var wordList = generateWordList();
-  var solution = [
-    wordList[0],
-    wordList[1],
-    wordList[2],
-    wordList[3],
-    wordList[4]
-  ];
+List<String> checkSolution(List<Box> updatedBox, solution) {
+  // var wordList = generateWordList();
+  // var solution = [
+  //   wordList[0],
+  //   wordList[1],
+  //   wordList[2],
+  //   wordList[3],
+  //   wordList[4]
+  // ];
   //check horizontal
   var row1Sort = updatedBox.where((box) => box.tile.y == 1).toList();
   row1Sort.sort(((a, b) => a.tile.x.compareTo(b.tile.x)));
@@ -106,11 +106,13 @@ bool checkSolution(List<Box> updatedBox) {
 
   // print(solution);
 
-  if (solution.isEmpty) {
-    return true;
-  }
+  return solution;
 
-  return false;
+  // if (solution.isEmpty) {
+  //   return true;
+  // }
+
+  // return false;
 }
 
 Box _updateBox(Box currentBox, Box selectedBox) {
