@@ -44,8 +44,9 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List<Box> _boxProps = [];
+  bool loading = false;
   bool debugMode = false;
   bool solved = false;
   num steps = 0;
@@ -53,27 +54,57 @@ class _MyHomePageState extends State<MyHomePage> {
   String time = '';
   bool timerActive = false;
   bool showTimeScore = false;
+  bool scoreSubmitted = false;
+  bool showEmptyError = false;
   List<String> wordList = generateWordList();
   List<String> solutionCheck = [];
   final ConfettiController _controllerCenter =
       ConfettiController(duration: const Duration(seconds: 10));
   late TextEditingController nameController;
   FirebaseAuth auth = FirebaseAuth.instance;
+  late AnimationController controller;
+  late MediaQueryData mediaQuery;
+  late bool smallScreen;
+  late double screenWidth;
 
   @override
   void initState() {
-    super.initState();
-    _boxProps = generateBoxProperties(wordList);
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..addListener(() {
+        setState(() {});
+      });
+    controller.repeat(reverse: true);
     solutionCheck = [...wordList];
     nameController = TextEditingController();
-    // _controllerCenter.play();
+
+    Future.delayed(Duration.zero, () {
+      var query = MediaQuery.of(context);
+      var small = query.size.width < 1024;
+      var width = query.size.width;
+      _boxProps = generateBoxProperties(wordList, small, width);
+    });
+
+    super.initState();
   }
 
   @override
   void dispose() {
     _controllerCenter.dispose();
+    controller.dispose();
     nameController.dispose();
     super.dispose();
+  }
+
+  void _reset() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        transitionDuration: Duration.zero,
+        pageBuilder: (_, __, ___) => const MyApp(),
+      ),
+    );
   }
 
   CollectionReference highscoreSteps =
@@ -198,6 +229,37 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                     ],
                   ),
+                  if (showEmptyError)
+                    SizedBox(
+                      width: 300,
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            const Text(
+                              "Name cannot be empty",
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Color.fromARGB(255, 230, 74, 74)),
+                            ),
+                            GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    showEmptyError = false;
+                                  });
+                                  Navigator.of(context).pop();
+                                  _displayDialog(context);
+                                },
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  width: 20,
+                                  height: 20,
+                                  child: const Text('x'),
+                                  decoration: BoxDecoration(
+                                      color: const Color(0xffffffff),
+                                      borderRadius: BorderRadius.circular(10)),
+                                ))
+                          ]),
+                    ),
                   SimpleDialog(
                     children: [
                       Container(
@@ -221,11 +283,29 @@ class _MyHomePageState extends State<MyHomePage> {
                       style: ElevatedButton.styleFrom(
                           primary: const Color.fromARGB(255, 73, 102, 190)),
                       onPressed: () async {
+                        if (nameController.text == '') {
+                          setState(() {
+                            showEmptyError = true;
+                          });
+                          Navigator.of(context).pop();
+                          _displayDialog(context);
+
+                          return;
+                        }
+
+                        Navigator.of(context).pop();
+
+                        setState(() {
+                          loading = true;
+                        });
                         await auth.signInAnonymously();
                         await addHighScoreSteps();
                         await addHighScoreTime();
                         await auth.signOut();
-                        Navigator.of(context).pop();
+                        setState(() {
+                          scoreSubmitted = true;
+                          loading = false;
+                        });
                       },
                       child: const Text(
                         "SEND",
@@ -259,13 +339,10 @@ class _MyHomePageState extends State<MyHomePage> {
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
               padding: const EdgeInsets.all(20),
-              // color: const Color(0x0000007f),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Column(
-                    // mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
@@ -286,14 +363,74 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ],
                   ),
-                  Column(
-                    children: [
-                      SizedBox(
+                  if (smallScreen)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 150,
                           height: 60,
-                          child: Text(
-                              showTimeScore ? 'TIME SCORE' : 'STEPS SCORE',
-                              style: const TextStyle(
-                                  fontSize: 30, color: Color(0xffffffff)))),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                primary:
+                                    const Color.fromARGB(255, 73, 102, 190)),
+                            onPressed: () => setState(() {
+                              showTimeScore = !showTimeScore;
+                              Navigator.of(context).pop();
+                              _displayHighScore(context);
+                            }),
+                            child: Text(showTimeScore ? 'STEPS' : 'TIME'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (smallScreen)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                            alignment: Alignment.center,
+                            height: 60,
+                            child: Text(
+                                showTimeScore ? 'TIME SCORE' : 'STEPS SCORE',
+                                style: const TextStyle(
+                                    fontSize: 30, color: Color(0xffffffff)))),
+                      ],
+                    ),
+                  if (!smallScreen)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Container(
+                            alignment: Alignment.center,
+                            height: 60,
+                            child: Text(
+                                showTimeScore ? 'TIME SCORE' : 'STEPS SCORE',
+                                style: const TextStyle(
+                                    fontSize: 30, color: Color(0xffffffff)))),
+                        SizedBox(
+                          width: 150,
+                          height: 60,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                primary:
+                                    const Color.fromARGB(255, 73, 102, 190)),
+                            onPressed: () => setState(() {
+                              showTimeScore = !showTimeScore;
+                              Navigator.of(context).pop();
+                              _displayHighScore(context);
+                            }),
+                            child: Text(showTimeScore ? 'STEPS' : 'TIME'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(
+                    height: 50,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                       if (!showTimeScore)
                         FutureBuilder<QuerySnapshot>(
                           future: highscoreSteps.get(),
@@ -305,28 +442,32 @@ class _MyHomePageState extends State<MyHomePage> {
 
                             if (snapshot.connectionState ==
                                 ConnectionState.done) {
+                              var query = snapshot.data?.docs ?? [];
+                              var data = List.generate(
+                                  query.length,
+                                  (index) => HighScoreSteps(
+                                      query[index].get('name'),
+                                      query[index].get('steps')));
+                              data.sort((a, b) => a.steps.compareTo(b.steps));
+
                               return Column(
                                 children: List.generate(
                                   snapshot.data?.docs.length ?? 0,
                                   (index) => Container(
-                                    width: 500,
+                                    width: smallScreen ? 250 : 500,
                                     color:
                                         const Color.fromARGB(255, 241, 204, 38),
                                     alignment: Alignment.center,
                                     child: Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                            MainAxisAlignment.spaceEvenly,
                                         children: [
                                           Container(
                                               alignment: Alignment.center,
-                                              width: 250,
+                                              width: smallScreen ? 50 : 250,
                                               height: 60,
                                               child: Text(
-                                                snapshot.data?.docs[index]
-                                                        .get('name')
-                                                        .toString()
-                                                        .toUpperCase() ??
-                                                    '',
+                                                data[index].name,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   fontSize: 25,
@@ -334,14 +475,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                               )),
                                           Container(
                                               alignment: Alignment.center,
-                                              width: 250,
+                                              width: smallScreen ? 50 : 250,
                                               height: 60,
                                               child: Text(
-                                                snapshot.data?.docs[index]
-                                                        .get('steps')
-                                                        .toString()
-                                                        .toUpperCase() ??
-                                                    '',
+                                                data[index].steps,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   fontSize: 25,
@@ -353,7 +490,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               );
                             }
 
-                            return const Text("loading");
+                            return CircularProgressIndicator(
+                              value: controller.value,
+                              semanticsLabel: 'Linear progress indicator',
+                            );
                           },
                         ),
                       if (showTimeScore)
@@ -367,28 +507,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
                             if (snapshot.connectionState ==
                                 ConnectionState.done) {
+                              var query = snapshot.data?.docs ?? [];
+                              var data = List.generate(
+                                  query.length,
+                                  (index) => HighScoreTime(
+                                      query[index].get('name'),
+                                      query[index].get('time')));
+                              data.sort((a, b) => a.time.compareTo(b.time));
                               return Column(
                                 children: List.generate(
                                   snapshot.data?.docs.length ?? 0,
                                   (index) => Container(
-                                    width: 500,
+                                    width: smallScreen ? 250 : 500,
                                     color:
                                         const Color.fromARGB(255, 241, 204, 38),
                                     alignment: Alignment.center,
                                     child: Row(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                            MainAxisAlignment.spaceEvenly,
                                         children: [
                                           Container(
                                               alignment: Alignment.center,
-                                              width: 250,
+                                              width: smallScreen ? 50 : 250,
                                               height: 60,
                                               child: Text(
-                                                snapshot.data?.docs[index]
-                                                        .get('name')
-                                                        .toString()
-                                                        .toUpperCase() ??
-                                                    '',
+                                                data[index].name,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   fontSize: 25,
@@ -396,14 +539,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                               )),
                                           Container(
                                               alignment: Alignment.center,
-                                              width: 250,
+                                              width: smallScreen ? 50 : 250,
                                               height: 60,
                                               child: Text(
-                                                snapshot.data?.docs[index]
-                                                        .get('time')
-                                                        .toString()
-                                                        .toUpperCase() ??
-                                                    '',
+                                                data[index].time,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                   fontSize: 25,
@@ -420,42 +559,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                     ],
                   ),
-                  Column(
-                    children: [
-                      if (showTimeScore)
-                        SizedBox(
-                          width: 150,
-                          height: 60,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                primary:
-                                    const Color.fromARGB(255, 73, 102, 190)),
-                            onPressed: () => setState(() {
-                              showTimeScore = false;
-                              Navigator.of(context).pop();
-                              _displayHighScore(context);
-                            }),
-                            child: const Text('STEPS'),
-                          ),
-                        ),
-                      if (!showTimeScore)
-                        SizedBox(
-                          width: 150,
-                          height: 60,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                primary:
-                                    const Color.fromARGB(255, 73, 102, 190)),
-                            onPressed: () => setState(() {
-                              showTimeScore = true;
-                              Navigator.of(context).pop();
-                              _displayHighScore(context);
-                            }),
-                            child: const Text('TIME'),
-                          ),
-                        ),
-                    ],
-                  )
                 ],
               ),
             ),
@@ -478,8 +581,12 @@ class _MyHomePageState extends State<MyHomePage> {
               DelayedDisplay(
                 delay: Duration(milliseconds: box.delay),
                 child: Container(
-                  width: tileWidth,
-                  height: tileHeight,
+                  width: smallScreen
+                      ? tileWidthSmall + ((screenWidth - 320) / 12.5)
+                      : tileWidth,
+                  height: smallScreen
+                      ? tileHeightSamll + ((screenWidth - 320) / 12.5)
+                      : tileHeight,
                   decoration: BoxDecoration(
                     color: box.color,
                   ),
@@ -543,20 +650,30 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    mediaQuery = MediaQuery.of(context);
+    smallScreen = mediaQuery.size.width < 1024;
+    screenWidth = mediaQuery.size.width;
+
     if (solved) {
       _controllerCenter.play();
-      var currentTimer = timer;
-      if (currentTimer != null) {
-        currentTimer.cancel();
-      }
+      // var currentTimer = timer;
+      // if (currentTimer != null) {
+      //   currentTimer.cancel();
+      // }
     }
 
     return Scaffold(
         backgroundColor: const Color(0xff0b132b),
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.start,
+            // mainAxisAlignment: smallScreen
+            //     ? MainAxisAlignment.start
+            //     : MainAxisAlignment.spaceEvenly,
             children: [
+              SizedBox(
+                height: smallScreen ? 50 : 100,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
@@ -566,6 +683,60 @@ class _MyHomePageState extends State<MyHomePage> {
                         fontSize: 24,
                       )),
                 ],
+              ),
+              SizedBox(
+                height: smallScreen ? 30 : 50,
+              ),
+              if (smallScreen)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        const Text("TIMER",
+                            style: TextStyle(
+                                color: Color(0xffffffff), fontSize: 22)),
+                        Container(
+                          width: 80,
+                          height: 80,
+                          alignment: Alignment.center,
+                          child: Text(
+                            timerActive ? time : '0',
+                            style: const TextStyle(fontSize: 26),
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: const Color(0xffffffff),
+                          ),
+                        )
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          "STEPS",
+                          style:
+                              TextStyle(color: Color(0xffffffff), fontSize: 22),
+                        ),
+                        Container(
+                          width: 80,
+                          height: 80,
+                          alignment: Alignment.center,
+                          child: Text(
+                            steps.toString(),
+                            style: const TextStyle(fontSize: 26),
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            color: const Color(0xffffffff),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              SizedBox(
+                height: 50,
               ),
               SizedBox(
                 child: ConfettiWidget(
@@ -587,36 +758,45 @@ class _MyHomePageState extends State<MyHomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Wrap(
-                    spacing: 20,
-                    direction: Axis.vertical,
-                    children: wordList.map((e) {
-                      TextStyle style;
+                  if (!smallScreen)
+                    Wrap(
+                      spacing: 20,
+                      direction: Axis.vertical,
+                      children: wordList.map((e) {
+                        TextStyle style;
 
-                      if (solutionCheck.contains(e)) {
-                        style = const TextStyle(color: Color(0xffffffff));
-                      } else {
-                        style = const TextStyle(
-                            color: Color.fromARGB(255, 146, 212, 120));
-                      }
+                        if (solutionCheck.contains(e)) {
+                          style = const TextStyle(color: Color(0xffffffff));
+                        } else {
+                          style = const TextStyle(
+                              color: Color.fromARGB(255, 146, 212, 120));
+                        }
 
-                      return Container(
-                        alignment: Alignment.center,
-                        width: 150,
-                        child: Text(
-                          e.toUpperCase(),
-                          style: style,
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                        return Container(
+                          alignment: Alignment.center,
+                          width: 150,
+                          child: Text(
+                            e.toUpperCase(),
+                            style: style,
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   Wrap(
                     children: [
                       Container(
                           alignment: Alignment.center,
                           color: const Color(0xff0b132b),
-                          width: (5 * tileWidth) + (4 * tileGap),
-                          height: (5 * tileHeight) + (4 * tileGap),
+                          width: smallScreen
+                              ? (5 * tileWidthSmall) +
+                                  (4 * tileGap) +
+                                  (5 * (screenWidth - 320) / 12.5)
+                              : (5 * tileWidth) + (4 * tileGap),
+                          height: smallScreen
+                              ? (5 * tileHeightSamll) +
+                                  (4 * tileGap) +
+                                  (5 * (screenWidth - 320) / 12.5)
+                              : (5 * tileHeight) + (4 * tileGap),
                           child: Stack(
                             alignment: Alignment.center,
                             children: _boxProps
@@ -625,78 +805,214 @@ class _MyHomePageState extends State<MyHomePage> {
                           )),
                     ],
                   ),
-                  Wrap(
-                    spacing: 20,
-                    direction: Axis.vertical,
-                    alignment: WrapAlignment.start,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      if (solved)
-                        Container(
-                          alignment: Alignment.center,
-                          child: SizedBox(
+                  if (!smallScreen)
+                    Wrap(
+                      spacing: 20,
+                      direction: Axis.vertical,
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (solved)
+                          Container(
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: 150,
+                              height: 60,
+                              child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      primary: const Color.fromARGB(
+                                          255, 73, 102, 190)),
+                                  onPressed: scoreSubmitted
+                                      ? _reset
+                                      : handleSubmitHighScore,
+                                  child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        if (loading)
+                                          SizedBox(
+                                            width: 10,
+                                            height: 10,
+                                            child: CircularProgressIndicator(
+                                              value: controller.value,
+                                              semanticsLabel:
+                                                  'Linear progress indicator',
+                                              valueColor:
+                                                  const AlwaysStoppedAnimation(
+                                                      Color(0xffffffff)),
+                                            ),
+                                          ),
+                                        Text(scoreSubmitted
+                                            ? 'PLAY AGAIN'
+                                            : 'SUBMIT SCORE'),
+                                      ])),
+                            ),
+                          ),
+                        Column(
+                          children: [
+                            const Text("TIMER",
+                                style: TextStyle(
+                                    color: Color(0xffffffff), fontSize: 22)),
+                            Container(
+                              width: 80,
+                              height: 80,
+                              margin:
+                                  const EdgeInsets.only(left: 35, right: 35),
+                              alignment: Alignment.center,
+                              child: Text(
+                                timerActive ? time : '0',
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: const Color(0xffffffff),
+                              ),
+                            )
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              "STEPS",
+                              style: TextStyle(
+                                  color: Color(0xffffffff), fontSize: 22),
+                            ),
+                            Container(
+                              width: 80,
+                              height: 80,
+                              alignment: Alignment.center,
+                              child: Text(
+                                steps.toString(),
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: const Color(0xffffffff),
+                              ),
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: handleShowHighScore,
+                          child: Container(
+                            alignment: Alignment.center,
                             width: 150,
                             height: 60,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  primary:
-                                      const Color.fromARGB(255, 73, 102, 190)),
-                              onPressed: handleSubmitHighScore,
-                              child: const Text('SUBMIT'),
+                            child: const Text(
+                              'HIGH SCORE',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              color: const Color(0xffffffff),
                             ),
                           ),
                         ),
-                      Column(
-                        children: [
-                          const Text("TIMER",
-                              style: TextStyle(
-                                  color: Color(0xffffffff), fontSize: 22)),
-                          Container(
-                            width: 80,
-                            height: 80,
-                            margin: const EdgeInsets.only(left: 35, right: 35),
-                            alignment: Alignment.center,
-                            child: Text(
-                              timerActive ? time : '0',
-                              style: const TextStyle(fontSize: 26),
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
-                              color: const Color(0xffffffff),
+                        if (debugMode)
+                          GestureDetector(
+                            onTap: (() => setState(() {
+                                  solved = true;
+                                })),
+                            child: Container(
+                              alignment: Alignment.center,
+                              width: 150,
+                              height: 60,
+                              child: const Text(
+                                'Test',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: const Color(0xffffffff),
+                              ),
                             ),
                           )
-                        ],
+                      ],
+                    ),
+                ],
+              ),
+              if (smallScreen)
+                const SizedBox(
+                  height: 30,
+                ),
+              if (smallScreen && solved)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    SizedBox(
+                      width: 280,
+                      height: 60,
+                      child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              primary: const Color.fromARGB(255, 73, 102, 190)),
+                          onPressed:
+                              scoreSubmitted ? _reset : handleSubmitHighScore,
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                if (loading)
+                                  SizedBox(
+                                    width: 10,
+                                    height: 10,
+                                    child: CircularProgressIndicator(
+                                      value: controller.value,
+                                      semanticsLabel:
+                                          'Linear progress indicator',
+                                      valueColor: const AlwaysStoppedAnimation(
+                                          Color(0xffffffff)),
+                                    ),
+                                  ),
+                                Text(scoreSubmitted
+                                    ? 'PLAY AGAIN'
+                                    : 'SUBMIT SCORE'),
+                              ])),
+                    ),
+                  ],
+                ),
+              if (smallScreen)
+                const SizedBox(
+                  height: 30,
+                ),
+              if (smallScreen)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    GestureDetector(
+                      onTap: handleShowHighScore,
+                      child: Container(
+                        alignment: Alignment.center,
+                        width: 280,
+                        height: 60,
+                        child: const Text(
+                          'HIGH SCORE',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: const Color(0xffffffff),
+                        ),
                       ),
-                      Column(
-                        children: [
-                          const Text(
-                            "STEPS",
-                            style: TextStyle(
-                                color: Color(0xffffffff), fontSize: 22),
-                          ),
-                          Container(
-                            width: 80,
-                            height: 80,
-                            alignment: Alignment.center,
-                            child: Text(
-                              steps.toString(),
-                              style: const TextStyle(fontSize: 26),
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(5),
-                              color: const Color(0xffffffff),
-                            ),
-                          ),
-                        ],
-                      ),
+                    ),
+                  ],
+                ),
+              const SizedBox(
+                height: 30,
+              ),
+              if (smallScreen && debugMode)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    if (debugMode)
                       GestureDetector(
-                        onTap: handleShowHighScore,
+                        onTap: (() => setState(() {
+                              solved = true;
+                            })),
                         child: Container(
                           alignment: Alignment.center,
-                          width: 150,
+                          width: 280,
                           height: 60,
                           child: const Text(
-                            'HIGH SCORE',
+                            'Test',
                             style: TextStyle(fontSize: 18),
                           ),
                           decoration: BoxDecoration(
@@ -705,12 +1021,24 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                       )
-                    ],
-                  ),
-                ],
-              ),
+                  ],
+                )
             ],
           ),
         ));
   }
+}
+
+class HighScoreTime {
+  late String name;
+  late String time;
+
+  HighScoreTime(this.name, this.time);
+}
+
+class HighScoreSteps {
+  late String name;
+  late String steps;
+
+  HighScoreSteps(this.name, this.steps);
 }

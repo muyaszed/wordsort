@@ -21,11 +21,10 @@ generateWordList() {
       wordList.add(fourWord);
     }
   }
- 
   return wordList;
 }
 
-List<Box> generateBoxProperties(wordList) {
+List<Box> generateBoxProperties(wordList, smallScreen, screenWidth) {
   // var wordList = generateWordList();
   print([wordList[0], wordList[1], wordList[2], wordList[3], wordList[4]]);
 
@@ -142,8 +141,14 @@ List<Box> generateBoxProperties(wordList) {
   }
 
   createBox(int index, String letter) {
-    double posX = (tileWidth + tileGap) * (index % 5);
-    double posY = (tileHeight + tileGap) * ((index / 5).floor());
+    double posX = smallScreen
+        ? (tileWidthSmall + ((screenWidth - 320) / 12.5) + tileGap) *
+            (index % 5)
+        : (tileWidth + tileGap) * (index % 5);
+    double posY = smallScreen
+        ? (tileHeightSamll + ((screenWidth - 320) / 12.5) + tileGap) *
+            ((index / 5).floor())
+        : (tileHeight + tileGap) * ((index / 5).floor());
     num x = 1 + (index / 5).floor();
     num y = 1 + (index % 5);
     TileCoordinate tile = TileCoordinate(x, y);
@@ -151,7 +156,7 @@ List<Box> generateBoxProperties(wordList) {
     Color color = isEmpty ? const Color(0xff0b132b) : const Color(0xff1c2541);
 
     return Box(posX, posY, tile, letter, createNeighbour(index, x, y), isEmpty,
-        color, index*50);
+        color, index * 50);
   }
 
   return List.generate(
