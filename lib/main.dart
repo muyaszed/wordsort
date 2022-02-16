@@ -663,8 +663,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
 
     return Scaffold(
-        backgroundColor: const Color(0xff0b132b),
-        body: Center(
+      backgroundColor: const Color(0xff0b132b),
+      body: SingleChildScrollView(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -1056,7 +1057,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 )
             ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
 
