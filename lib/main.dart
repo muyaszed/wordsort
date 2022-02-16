@@ -667,9 +667,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            // mainAxisAlignment: smallScreen
-            //     ? MainAxisAlignment.start
-            //     : MainAxisAlignment.spaceEvenly,
             children: [
               SizedBox(
                 height: smallScreen ? 50 : 100,
@@ -735,7 +732,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     ),
                   ],
                 ),
-              SizedBox(
+              const SizedBox(
                 height: 50,
               ),
               SizedBox(
@@ -966,6 +963,40 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                                     ? 'PLAY AGAIN'
                                     : 'SUBMIT SCORE'),
                               ])),
+                    ),
+                  ],
+                ),
+              if (smallScreen)
+                const SizedBox(
+                  height: 30,
+                ),
+              if (smallScreen)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Wrap(
+                      spacing: 20,
+                      alignment: WrapAlignment.center,
+                      direction: Axis.vertical,
+                      children: wordList.map((e) {
+                        TextStyle style;
+
+                        if (solutionCheck.contains(e)) {
+                          style = const TextStyle(color: Color(0xffffffff));
+                        } else {
+                          style = const TextStyle(
+                              color: Color.fromARGB(255, 146, 212, 120));
+                        }
+
+                        return Container(
+                          alignment: Alignment.center,
+                          width: 150,
+                          child: Text(
+                            e.toUpperCase(),
+                            style: style,
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
