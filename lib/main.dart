@@ -656,10 +656,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     if (solved) {
       _controllerCenter.play();
-      // var currentTimer = timer;
-      // if (currentTimer != null) {
-      //   currentTimer.cancel();
-      // }
+      var currentTimer = timer;
+      if (currentTimer != null) {
+        currentTimer.cancel();
+      }
     }
 
     return Scaffold(
