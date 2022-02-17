@@ -656,9 +656,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     if (solved) {
       _controllerCenter.play();
-      var currentTimer = timer;
-      if (currentTimer != null) {
-        currentTimer.cancel();
+
+      if (!debugMode) {
+        var currentTimer = timer;
+        if (currentTimer != null) {
+          currentTimer.cancel();
+        }
       }
     }
 
@@ -684,57 +687,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ),
               SizedBox(
                 height: smallScreen ? 30 : 50,
-              ),
-              if (smallScreen)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        const Text("TIMER",
-                            style: TextStyle(
-                                color: Color(0xffffffff), fontSize: 22)),
-                        Container(
-                          width: 80,
-                          height: 80,
-                          alignment: Alignment.center,
-                          child: Text(
-                            timerActive ? time : '0',
-                            style: const TextStyle(fontSize: 26),
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5),
-                            color: const Color(0xffffffff),
-                          ),
-                        )
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        const Text(
-                          "STEPS",
-                          style:
-                              TextStyle(color: Color(0xffffffff), fontSize: 22),
-                        ),
-                        Container(
-                          width: 80,
-                          height: 80,
-                          alignment: Alignment.center,
-                          child: Text(
-                            steps.toString(),
-                            style: const TextStyle(fontSize: 26),
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5),
-                            color: const Color(0xffffffff),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              const SizedBox(
-                height: 50,
               ),
               SizedBox(
                 child: ConfettiWidget(
@@ -973,7 +925,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ),
               if (smallScreen)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Wrap(
                       spacing: 20,
@@ -991,13 +943,60 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
                         return Container(
                           alignment: Alignment.center,
-                          width: 150,
+                          width: 60,
                           child: Text(
                             e.toUpperCase(),
                             style: style,
                           ),
                         );
                       }).toList(),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          children: [
+                            const Text("TIMER",
+                                style: TextStyle(
+                                    color: Color(0xffffffff), fontSize: 22)),
+                            Container(
+                              width: 80,
+                              height: 80,
+                              alignment: Alignment.center,
+                              child: Text(
+                                timerActive ? time : '0',
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: const Color(0xffffffff),
+                              ),
+                            )
+                          ],
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              "STEPS",
+                              style: TextStyle(
+                                  color: Color(0xffffffff), fontSize: 22),
+                            ),
+                            Container(
+                              width: 80,
+                              height: 80,
+                              alignment: Alignment.center,
+                              child: Text(
+                                steps.toString(),
+                                style: const TextStyle(fontSize: 26),
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color: const Color(0xffffffff),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
