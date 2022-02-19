@@ -1,15 +1,6 @@
 import '../models/box.dart';
-import '../services/box.dart';
 
 List<String> checkSolution(List<Box> updatedBox, solution) {
-  // var wordList = generateWordList();
-  // var solution = [
-  //   wordList[0],
-  //   wordList[1],
-  //   wordList[2],
-  //   wordList[3],
-  //   wordList[4]
-  // ];
   //check horizontal
   var row1Sort = updatedBox.where((box) => box.tile.y == 1).toList();
   row1Sort.sort(((a, b) => a.tile.x.compareTo(b.tile.x)));
@@ -126,7 +117,8 @@ Box _updateBox(Box currentBox, Box selectedBox) {
   return currentBox;
 }
 
-List<Box> updateBoxesProp(List<Box> currentBoxesProp, Box selectedBox) {
+List<dynamic> updateBoxesProp(
+    List<Box> currentBoxesProp, Box selectedBox, num steps) {
   var newBoxProps = currentBoxesProp
       .map<Box>((currentBox) => _updateBox(currentBox, selectedBox))
       .toList();
@@ -184,6 +176,8 @@ List<Box> updateBoxesProp(List<Box> currentBoxesProp, Box selectedBox) {
 
     newBox.neighbour = rightBox.neighbour;
     rightBox.neighbour = tempNeghbours;
+
+    steps++;
   } else if (leftBox != null && leftBox.empty) {
     //swap box location
     newBox.startPosX = leftBox.startPosX;
@@ -200,6 +194,7 @@ List<Box> updateBoxesProp(List<Box> currentBoxesProp, Box selectedBox) {
     //swap neighbours
     newBox.neighbour = leftBox.neighbour;
     leftBox.neighbour = tempNeghbours;
+    steps++;
   } else if (topBox != null && topBox.empty) {
     //swap box location
     newBox.startPosX = topBox.startPosX;
@@ -216,6 +211,7 @@ List<Box> updateBoxesProp(List<Box> currentBoxesProp, Box selectedBox) {
     //swap neighbours
     newBox.neighbour = topBox.neighbour;
     topBox.neighbour = tempNeghbours;
+    steps++;
   } else if (bottomBox != null && bottomBox.empty) {
     //swap box location
     newBox.startPosX = bottomBox.startPosX;
@@ -232,7 +228,8 @@ List<Box> updateBoxesProp(List<Box> currentBoxesProp, Box selectedBox) {
     //swap neighbours
     newBox.neighbour = bottomBox.neighbour;
     bottomBox.neighbour = tempNeghbours;
+    steps++;
   }
 
-  return newBoxProps;
+  return [newBoxProps, steps];
 }

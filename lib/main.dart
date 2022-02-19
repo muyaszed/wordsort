@@ -136,6 +136,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         .catchError((error) => print("Failed to add user: $error"));
   }
 
+  checkSteps() {}
+
   void _handleClick(Box selectedBox) {
     if (!timerActive) {
       Timer.periodic(const Duration(seconds: 1), (seconds) {
@@ -151,14 +153,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       return;
     }
 
-    var newBoxProps = updateBoxesProp(_boxProps, selectedBox);
-    var newSolutionCheck = checkSolution(newBoxProps, [...wordList]);
+    var updated = updateBoxesProp(_boxProps, selectedBox, steps);
+    var newSolutionCheck = checkSolution(updated[0], [...wordList]);
+    var newBoxProps = updated[0];
+    var newSteps = updated[1];
 
     setState(() {
       _boxProps = newBoxProps;
       solved = newSolutionCheck.isEmpty;
       solutionCheck = newSolutionCheck;
-      steps++;
+      steps = newSteps;
     });
   }
 
