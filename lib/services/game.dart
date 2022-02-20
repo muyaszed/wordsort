@@ -119,6 +119,7 @@ Box _updateBox(Box currentBox, Box selectedBox) {
 
 List<dynamic> updateBoxesProp(
     List<Box> currentBoxesProp, Box selectedBox, num steps) {
+  bool startTimer = false;
   var newBoxProps = currentBoxesProp
       .map<Box>((currentBox) => _updateBox(currentBox, selectedBox))
       .toList();
@@ -178,6 +179,7 @@ List<dynamic> updateBoxesProp(
     rightBox.neighbour = tempNeghbours;
 
     steps++;
+    startTimer = true;
   } else if (leftBox != null && leftBox.empty) {
     //swap box location
     newBox.startPosX = leftBox.startPosX;
@@ -195,6 +197,7 @@ List<dynamic> updateBoxesProp(
     newBox.neighbour = leftBox.neighbour;
     leftBox.neighbour = tempNeghbours;
     steps++;
+    startTimer = true;
   } else if (topBox != null && topBox.empty) {
     //swap box location
     newBox.startPosX = topBox.startPosX;
@@ -212,6 +215,7 @@ List<dynamic> updateBoxesProp(
     newBox.neighbour = topBox.neighbour;
     topBox.neighbour = tempNeghbours;
     steps++;
+    startTimer = true;
   } else if (bottomBox != null && bottomBox.empty) {
     //swap box location
     newBox.startPosX = bottomBox.startPosX;
@@ -229,7 +233,8 @@ List<dynamic> updateBoxesProp(
     newBox.neighbour = bottomBox.neighbour;
     bottomBox.neighbour = tempNeghbours;
     steps++;
+    startTimer = true;
   }
 
-  return [newBoxProps, steps];
+  return [newBoxProps, steps, startTimer];
 }

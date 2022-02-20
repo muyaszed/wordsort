@@ -8,6 +8,7 @@ import 'package:word_sort/board.dart';
 import 'package:word_sort/confetti.dart';
 import 'package:word_sort/header.dart';
 import 'package:word_sort/highScore.dart';
+import 'package:word_sort/howTo.dart';
 import 'package:word_sort/main.dart';
 import 'package:word_sort/services/box.dart';
 import 'package:word_sort/services/game.dart';
@@ -95,7 +96,6 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
   }
 
   Future<void> addHighScoreSteps() {
-    // Call the user's CollectionReference to add a new user
     return highScoreSteps
         .add({
           'name': nameController.text,
@@ -117,16 +117,6 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
   }
 
   void _handleClick(Box selectedBox) {
-    if (!timerActive) {
-      Timer.periodic(const Duration(seconds: 1), (seconds) {
-        setState(() {
-          time = seconds.tick.toString();
-          timer = seconds;
-          timerActive = true;
-        });
-      });
-    }
-
     if (selectedBox.empty || solved) {
       return;
     }
@@ -135,6 +125,18 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
     var newSolutionCheck = checkSolution(updated[0], [...wordList]);
     var newBoxProps = updated[0];
     var newSteps = updated[1];
+    var startTimer = updated[2];
+
+    if (!timerActive && startTimer) {
+      print('Start timer');
+      Timer.periodic(const Duration(seconds: 1), (seconds) {
+        setState(() {
+          time = seconds.tick.toString();
+          timer = seconds;
+          timerActive = true;
+        });
+      });
+    }
 
     setState(() {
       _boxProps = newBoxProps;
@@ -149,7 +151,20 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
   }
 
   void handleShowHighScore() {
-    _displayHighScore(context);
+    displayHighScore(context);
+  }
+
+  void handleShowHowToPlay() {
+    displayHowTo(context);
+  }
+
+  displayHowTo(BuildContext context) {
+    showGeneralDialog(
+        context: context,
+        barrierDismissible: false,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return HowTo(handleCloseButton: () => Navigator.of(context).pop());
+        });
   }
 
   displaySubmitForm(BuildContext context) {
@@ -198,7 +213,7 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  _displayHighScore(BuildContext context) {
+  displayHighScore(BuildContext context) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -210,7 +225,7 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
             handleToggleScore: () => setState(() {
                   showTimeScore = !showTimeScore;
                   Navigator.of(context).pop();
-                  _displayHighScore(context);
+                  displayHighScore(context);
                 }),
             animationController: animationController,
             highScoreSteps: highScoreSteps,
@@ -312,6 +327,16 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
                           height: 60,
                           color: const Color(0xffffffff),
                         ),
+                        Button(
+                          child: const Text(
+                            'HOW TO PLAY',
+                            style: TextStyle(fontSize: 18, color: Colors.black),
+                          ),
+                          handleButtonPressed: handleShowHowToPlay,
+                          width: 150,
+                          height: 60,
+                          color: const Color(0xffffffff),
+                        ),
                         if (debugMode)
                           Button(
                               child: const Text(
@@ -405,6 +430,25 @@ class _MyHomePageState extends State<Home> with TickerProviderStateMixin {
                         style: TextStyle(fontSize: 18, color: Colors.black),
                       ),
                       handleButtonPressed: handleShowHighScore,
+                      width: 280,
+                      height: 60,
+                      color: const Color(0xffffffff),
+                    )
+                  ],
+                ),
+              const SizedBox(
+                height: 30,
+              ),
+              if (smallScreen)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Button(
+                      child: const Text(
+                        'HOW TO PLAY',
+                        style: TextStyle(fontSize: 18, color: Colors.black),
+                      ),
+                      handleButtonPressed: handleShowHowToPlay,
                       width: 280,
                       height: 60,
                       color: const Color(0xffffffff),

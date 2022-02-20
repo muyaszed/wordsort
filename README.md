@@ -1,16 +1,15 @@
 # word_sort
 
-A new Flutter project.
+A slide woed puxzzle game
 
-## Getting Started
+## Hot to play
 
-This project is a starting point for a Flutter application.
+Rearrange the letters according to the set of chosen words.
 
-A few resources to get you started if this is your first Flutter project:
+The approach you take to solve the puzzle is up to you.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+The grid will contain 4 five letter words and 1 four letter word.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The timer will start as soon as you perform your first move and there will also be a step counter.
+
+Once completed, you have the option to submit your score to the leaderboards to see how well you did.

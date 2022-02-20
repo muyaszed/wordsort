@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:word_sort/shared/button.dart';
 import 'package:word_sort/shared/customCloseButton.dart';
@@ -12,19 +11,12 @@ class SubmitForm extends StatelessWidget {
     required this.nameTextController,
     required this.handleSendButton,
     required this.handleCloseError,
-    // required this.context,
-    // required this.highScoreSteps,
-    // required this.highScoreTime,
   }) : super(key: key);
   final bool showEmptyError;
   final void Function() handleCloseButton;
   final void Function() handleCloseError;
   final TextEditingController nameTextController;
   final void Function() handleSendButton;
-  // final BuildContext context;
-
-  // final CollectionReference highScoreSteps;
-  // final CollectionReference highScoreTime;
 
   @override
   Widget build(BuildContext context) {
