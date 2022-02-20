@@ -1,6 +1,6 @@
 # word_sort
 
-A slide woed puxzzle game
+A slide word puxzzle game
 
 ## Hot to play
 
