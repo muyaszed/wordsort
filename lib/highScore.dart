@@ -134,24 +134,24 @@ class HighScore extends StatelessWidget {
                                 children: [
                                   Container(
                                       alignment: Alignment.center,
-                                      width: smallScreen ? 50 : 250,
+                                      width: smallScreen ? 100 : 250,
                                       height: 60,
                                       child: Text(
                                         data[index].name,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          fontSize: 25,
+                                          fontSize: 22,
                                         ),
                                       )),
                                   Container(
                                       alignment: Alignment.center,
-                                      width: smallScreen ? 50 : 250,
+                                      width: smallScreen ? 100 : 250,
                                       height: 60,
                                       child: Text(
                                         data[index].steps,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          fontSize: 25,
+                                          fontSize: 22,
                                         ),
                                       )),
                                 ]),
@@ -195,24 +195,24 @@ class HighScore extends StatelessWidget {
                                 children: [
                                   Container(
                                       alignment: Alignment.center,
-                                      width: smallScreen ? 50 : 250,
+                                      width: smallScreen ? 100 : 250,
                                       height: 60,
                                       child: Text(
                                         data[index].name,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          fontSize: 25,
+                                          fontSize: 22,
                                         ),
                                       )),
                                   Container(
                                       alignment: Alignment.center,
-                                      width: smallScreen ? 50 : 250,
+                                      width: smallScreen ? 100 : 250,
                                       height: 60,
                                       child: Text(
                                         data[index].time,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          fontSize: 25,
+                                          fontSize: 22,
                                         ),
                                       )),
                                 ]),
